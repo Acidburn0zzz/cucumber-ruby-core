@@ -160,21 +160,25 @@ module Cucumber
             visitor.stub(:scenario_outline).and_yield
             visitor.stub(:outline_step)
             expect( visitor ).to receive(:examples_table).exactly(2).times.and_yield
-            expect( visitor ).to receive(:examples_table_row) do |row|
-              expect( row.number ).to eq 1
-              expect( row.values ).to eq ['1']
-            end.once.ordered
-            expect( visitor ).to receive(:examples_table_row) do |row|
-              expect( row.number ).to eq 2
-              expect( row.values ).to eq ['2']
-            end.once.ordered
-            expect( visitor ).to receive(:examples_table_row) do |row|
-              expect( row.number ).to eq 1
-              expect( row.values ).to eq ['a']
-            end.once.ordered
+            expect( visitor ).to receive(
+              :examples_table_row, &for_row(1, values: ['1'])
+            ).once.ordered
+            expect( visitor ).to receive(
+              :examples_table_row, &for_row(2, values: ['2'])
+            ).once.ordered
+            expect( visitor ).to receive(
+              :examples_table_row, &for_row(1, values: ['a'])
+            ).once.ordered
             feature.describe_to(visitor)
           end
 
+          def for_row(number, args)
+            values = args.fetch(:values)
+            lambda do |row|
+              expect( row.number ).to eq number
+              expect( row.values ).to eq values
+            end
+          end
         end
       end
     end

@@ -24,10 +24,12 @@ module Cucumber
           let(:test_case) { Test::Case.new([test_step], double) }
 
           it "maps to a step that executes to an undefined result" do
-            expect( receiver ).to receive(:test_step) do |test_step|
-              expect( test_step.name ).to eq 'unmapped'
-              expect( test_step.execute ).to be_undefined
-            end.once.ordered
+            expect( receiver ).to(
+              receive(:test_step) do |test_step|
+                expect( test_step.name ).to eq 'unmapped'
+                expect( test_step.execute ).to be_undefined
+              end.once.ordered
+            )
             test_case.describe_to mapper
           end
         end
@@ -37,11 +39,13 @@ module Cucumber
           let(:test_case) { Test::Case.new([test_step], double) }
 
           it "maps to a step that executes the block" do
-            expect( receiver ).to receive(:test_step) do |test_step|
-              expect( test_step.name ).to eq 'mapped'
-              expect( app ).to receive(:do_something)
-              test_step.execute
-            end.once.ordered
+            expect( receiver ).to(
+              receive(:test_step) do |test_step|
+                expect( test_step.name ).to eq 'mapped'
+                expect( app ).to receive(:do_something)
+                test_step.execute
+              end.once.ordered
+            )
             test_case.describe_to mapper
           end
         end
@@ -52,14 +56,17 @@ module Cucumber
           let(:test_case) { Test::Case.new([mapped, unmapped], double) }
 
           it "maps each of the test steps" do
-            expect( receiver ).to receive(:test_step) do |test_step|
-              expect( test_step.name ).to eq 'passing'
-            end.once.ordered
-            expect( receiver ).to receive(:test_step) do |test_step|
-              expect( test_step.name ).to eq 'unmapped'
-            end.once.ordered
+            expect( receiver ).to receive(:test_step, &named('passing')).once.ordered
+            expect( receiver ).to receive(:test_step, &named('unmapped')).once.ordered
             test_case.describe_to mapper
           end
+
+          def named(name)
+            lambda do |test_step|
+              expect( test_step.name ).to eq name
+            end
+          end
+
         end
       end
     end

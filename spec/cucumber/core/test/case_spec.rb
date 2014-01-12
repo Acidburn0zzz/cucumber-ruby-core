@@ -95,16 +95,22 @@ module Cucumber
                 end
               end
               receiver = double
-              expect( receiver ).to receive(:test_case) do |test_case|
-                expect( test_case.name ).to eq 'Scenario Outline: outline name, examples name (row 1)'
-              end.once.ordered
-              expect( receiver ).to receive(:test_case) do |test_case|
-                expect( test_case.name ).to eq 'Scenario Outline: outline name, examples name (row 2)'
-              end.once.ordered
-              expect( receiver ).to receive(:test_case) do |test_case|
-                expect( test_case.name ).to eq 'Scenario Outline: outline name, Examples (row 1)'
-              end.once.ordered
+              expect( receiver ).to receive(
+                :test_case, &named('Scenario Outline: outline name, examples name (row 1)')
+              ).once.ordered
+              expect( receiver ).to receive(
+                :test_case, &named('Scenario Outline: outline name, examples name (row 2)')
+              ).once.ordered
+              expect( receiver ).to receive(
+                :test_case, &named('Scenario Outline: outline name, Examples (row 1)')
+              ).once.ordered
               compile [gherkin], receiver
+            end
+
+            def named(name)
+              lambda do |test_case|
+                expect( test_case.name ).to eq name
+              end
             end
           end
         end
@@ -143,13 +149,19 @@ module Cucumber
                 end
               end
               receiver = double
-              expect( receiver ).to receive(:test_case) do |test_case|
-                expect( test_case.location.to_s ).to eq 'features/foo.feature:8'
-              end.once.ordered
-              expect( receiver ).to receive(:test_case) do |test_case|
-                expect( test_case.location.to_s ).to eq 'features/foo.feature:9'
-              end.once.ordered
+              expect( receiver ).to receive(
+                :test_case, &located('features/foo.feature:8')
+              ).once.ordered
+              expect( receiver ).to receive(
+                :test_case, &located('features/foo.feature:9')
+              ).once.ordered
               compile [gherkin], receiver
+            end
+
+            def located(location)
+              lambda do |test_case|
+                expect( test_case.location.to_s ).to eq location
+              end
             end
           end
         end
@@ -171,13 +183,15 @@ module Cucumber
               end
             end
             receiver = double
-            expect( receiver ).to receive(:test_case) do |test_case|
-              expect( test_case.tags.map(&:name) ).to eq ['@a', '@b', '@c']
-            end.once.ordered
-            expect( receiver ).to receive(:test_case) do |test_case|
-              expect( test_case.tags.map(&:name) ).to eq ['@a', '@b', '@d', '@e']
-            end.once.ordered
+            expect( receiver ).to receive(:test_case, &tagged('@a', '@b', '@c')).once.ordered
+            expect( receiver ).to receive(:test_case, &tagged('@a', '@b', '@d', '@e')).once.ordered
             compile [gherkin], receiver
+          end
+
+          def tagged(*tags)
+            lambda do |test_case|
+              expect( test_case.tags.map(&:name) ).to eq tags
+            end
           end
         end
 

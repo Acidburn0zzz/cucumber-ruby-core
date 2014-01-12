@@ -129,21 +129,14 @@ module Cucumber::Core
         ]
 
         compile(gherkin_documents) do |visitor|
-          expect( visitor ).to receive(:test_step) do |test_step|
-            visit_source(test_step) do |source_visitor|
-              expect( source_visitor ).to receive(:step) do |step|
-                expect(step.name).to eq 'passing 1 with 2'
-              end
-            end
-          end.once.ordered
+          expect( visitor ).to receive( :test_step, &named('passing 1 with 2') ).once.ordered
+          expect( visitor ).to receive( :test_step, &named('as well as 3')     ).once.ordered
+        end
+      end
 
-          expect( visitor ).to receive(:test_step) do |test_step|
-            visit_source(test_step) do |source_visitor|
-              expect( source_visitor ).to receive(:step) do |step|
-                expect(step.name).to eq 'as well as 3'
-              end
-            end
-          end.once.ordered
+      def named(name)
+        lambda do |test_step|
+          expect(test_step.name).to eq name
         end
       end
     end

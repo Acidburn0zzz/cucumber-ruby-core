@@ -52,9 +52,10 @@ module Cucumber
 
       it "filters out test cases based on a tag expression" do
         visitor = double.as_null_object
-        expect( visitor ).to receive(:test_case) do |test_case|
-          expect( test_case.name ).to eq 'Scenario Outline: foo, bar (row 1)'
-        end.exactly(1).times
+        expect( visitor ).to receive(
+          :test_case, 
+          &named('Scenario Outline: foo, bar (row 1)')
+        ).exactly(1).times
 
         gherkin = gherkin do
           feature do
@@ -79,6 +80,12 @@ module Cucumber
         end
 
         compile [gherkin], visitor, [[Cucumber::Core::Test::TagFilter, [['@a', '@b']]]]
+      end
+
+      def named(name)
+        lambda do |test_case|
+          expect( test_case.name ).to eq name
+        end
       end
     end
 
