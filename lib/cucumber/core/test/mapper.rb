@@ -5,6 +5,9 @@ module Cucumber
       class Mapper
         include Cucumber.initializer(:mappings, :runner)
 
+        def test_suite_started; end
+        def test_suite_finished; end
+
         def test_case(test_case, &descend)
           mapper = CaseMapper.new(mappings)
           descend.call(mapper)

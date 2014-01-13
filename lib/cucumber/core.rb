@@ -9,9 +9,7 @@ module Cucumber
 
     def parse(gherkin_documents, compiler)
       parser = Core::Gherkin::Parser.new(compiler)
-      gherkin_documents.each do |document|
-        parser.document document
-      end
+      parser.test_suite(gherkin_documents)
       self
     end
 

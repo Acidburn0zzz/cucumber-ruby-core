@@ -10,8 +10,8 @@ module Cucumber
     describe "parsing Gherkin" do
       it "calls the compiler with a valid AST" do
         compiler = double
-        expect( compiler ).to receive(:feature) do |feature|
-          expect( feature ).to respond_to(:describe_to)
+        expect( compiler ).to receive(:test_suite) do |test_suite|
+          expect( test_suite ).to respond_to(:describe_to)
         end
 
         gherkin = gherkin do
@@ -29,8 +29,10 @@ module Cucumber
     describe "compiling features to a test suite" do
       it "compiles two scenarios into two test cases" do
         visitor = double
+        expect( visitor ).to receive(:test_suite_started).exactly(1).times.ordered
         expect( visitor ).to receive(:test_case).exactly(2).times.and_yield.ordered
         expect( visitor ).to receive(:test_step).exactly(5).times.ordered
+        expect( visitor ).to receive(:test_suite_finished).exactly(1).times.ordered
 
         compile([
           gherkin do
@@ -79,6 +81,33 @@ module Cucumber
         end
 
         compile [gherkin], visitor, [[Cucumber::Core::Test::TagFilter, [['@a', '@b']]]]
+      end
+
+      it 'limits test cases based a tag expression' do
+        visitor = double.as_null_object
+        gherkin = gherkin do
+          feature 'Sample', tags: '@feature' do
+            scenario 'Example', tags: '@one @three' do
+              step
+            end
+
+            scenario 'Another Example', tags: '@one' do
+              step
+            end
+
+            scenario 'Yet Another Example', tags: '@three' do
+              step
+            end
+
+            scenario 'And yet another example', tags: '@ignore' do
+              step
+            end
+          end
+        end
+
+        expect {
+          compile [gherkin], visitor, [[Cucumber::Core::Test::TagFilter, [['@one:1']]]]
+        }.to raise_error /@one occurred 2 times, but the limit was set to 1/
       end
     end
 

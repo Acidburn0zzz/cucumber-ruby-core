@@ -7,10 +7,24 @@ module Cucumber
     class Compiler
       include Cucumber.initializer(:receiver)
 
-      def feature(feature)
-        compiler = FeatureCompiler.new(TestCaseBuilder.new(receiver))
-        feature.describe_to(compiler)
-        self
+      def test_suite(test_suite)
+        test_suite.describe_to(TestSuiteCompiler.new(receiver))
+      end
+
+      class TestSuiteCompiler
+        include Cucumber.initializer(:receiver)
+
+        def test_suite(test_suite, &descend)
+          receiver.test_suite_started
+          descend.call(self)
+          receiver.test_suite_finished
+        end
+
+        def feature(feature)
+          compiler = FeatureCompiler.new(TestCaseBuilder.new(receiver))
+          feature.describe_to(compiler)
+          self
+        end
       end
 
       class TestCaseBuilder
