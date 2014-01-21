@@ -6,7 +6,7 @@ module Cucumber
 
         def test_case(test_case)
           test_cases << test_case
-          if test_case.match_tags?(filter_expressions)
+          if test_case.match_tags?(boolean_expression)
             test_case.describe_to(receiver)
           end
           self
@@ -25,6 +25,60 @@ module Cucumber
 
         def tag_limits
           @tag_limits ||= TagLimits.new(filter_expressions)
+        end
+
+        def boolean_expression
+          @boolean_expression ||= BooleanExpression.from_filter_expressions(filter_expressions)
+        end
+
+        require 'bool'
+        class BooleanExpression
+          TAG_MATCHER = /^
+            (?<negation>~)?        #The tag negation symbol "~". This is optional.
+            (?<tag_name>\@[\w\d]+) #Captures the tag name including the "@" symbol.
+            (?:\:\d+)?             #The tag limit. This is optional and not capured.
+          $/x
+
+          def self.from_filter_expressions(filter_expressions)
+            matched_expressions = recursivley_match(
+              Array(filter_expressions).map do |raw_expression|
+                raw_expression.split(/\s*,\s*/)
+              end
+            )
+            expanded = expand(matched_expressions)
+            new(expanded)
+          end
+
+          def self.expand(expressions)
+            '(' + expressions.map do |expression|
+              expression.join(' || ') if expression.respond_to?(:join)
+            end.join(') && (') + ')'
+          end
+
+          def self.recursivley_match(tag_expressions)
+            tag_expressions.map do |tag_expression|
+              case tag_expression
+              when String
+                if matchdata = TAG_MATCHER.match(tag_expression)
+                  negation = !!matchdata[:negation] ? '!' : ''
+                  negation + matchdata[:tag_name]
+                end
+              when Array
+                recursivley_match(tag_expression).compact
+              end
+            end.compact
+          end
+          private_class_method :recursivley_match
+
+          attr_reader :ast
+          private :ast
+          def initialize(boolean_expression)
+            @ast = Bool.parse(boolean_expression)
+          end
+
+          def evaluate(vars)
+            ast.accept(Bool::Evaluator.new, vars)
+          end
         end
 
         class TestCases

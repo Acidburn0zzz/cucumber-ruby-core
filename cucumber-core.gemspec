@@ -15,6 +15,7 @@ Gem::Specification.new do |s|
   s.required_ruby_version = ">= 1.9.3"
 
   s.add_dependency 'gherkin', '~> 2.12.0'
+  s.add_dependency 'bool',    '~> 1.0.20'
 
   s.add_development_dependency 'bundler',   '>= 1.3.5'
   s.add_development_dependency 'rake',      '>= 0.9.2'

@@ -182,6 +182,7 @@ module Cucumber
         end
 
         describe "matching tags" do
+          require 'cucumber/core/test/filters/tag_filter'
           it "matches boolean expressions of tags" do
             gherkin = gherkin do
               feature tags: ['@a', '@b'] do
@@ -190,9 +191,10 @@ module Cucumber
                 end
               end
             end
+            boolean_expression = TagFilter::BooleanExpression.new('@a')
             receiver = double.as_null_object
             expect( receiver ).to receive(:test_case) do |test_case|
-              expect( test_case.match_tags?('@a') ).to be_true
+              expect( test_case.match_tags?(boolean_expression) ).to be_true
             end
             compile [gherkin], receiver
           end
