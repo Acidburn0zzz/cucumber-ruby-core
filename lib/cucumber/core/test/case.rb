@@ -46,7 +46,6 @@ module Cucumber
           @tags ||= TagCollector.new(self).result
         end
 
-        require 'gherkin/tag_expression'
         def match_tags?(tag_expression)
           tag_expression.evaluate(tags.map(&:name))
         end
